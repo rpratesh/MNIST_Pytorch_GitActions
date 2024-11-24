@@ -21,7 +21,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install torch torchvision pytest numpy
+        pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        pip install pytest numpy
 
     - name: Create test file
       run: |
@@ -29,7 +30,7 @@ jobs:
         import torch
         import pytest
         from model import Model
-        from train_test import train, test, count_parameters
+        from train_test import count_parameters
         from torch.utils.data import DataLoader
         from torchvision import datasets, transforms
         import torch.nn as nn
