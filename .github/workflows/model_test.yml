@@ -1,0 +1,96 @@
+name: Model Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision pytest numpy
+
+    - name: Create test file
+      run: |
+        cat > test_model.py << 'EOL'
+        import torch
+        import pytest
+        from model import Model
+        from train_test import train, test, count_parameters
+        from torch.utils.data import DataLoader
+        from torchvision import datasets, transforms
+        import torch.nn as nn
+        import torch.optim as optim
+
+        @pytest.fixture
+        def model():
+            return Model()
+
+        @pytest.fixture
+        def data_loaders():
+            transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.1307,), (0.3081,))
+            ])
+            
+            train_dataset = datasets.MNIST(root='./data', train=True, 
+                                         download=True, transform=transform)
+            train_loader = DataLoader(dataset=train_dataset, 
+                                    batch_size=64, shuffle=True)
+            
+            test_dataset = datasets.MNIST(root='./data', train=False, 
+                                        download=True, transform=transform)
+            test_loader = DataLoader(dataset=test_dataset, 
+                                   batch_size=64, shuffle=False)
+            
+            return train_loader, test_loader
+
+        def test_parameter_count(model):
+            params = count_parameters(model)
+            assert params['total'] < 25000, f"Model has {params['total']} parameters, should be less than 25000"
+
+        def test_training_accuracy(model, data_loaders):
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            model = model.to(device)
+            train_loader, test_loader = data_loaders
+            
+            criterion = nn.CrossEntropyLoss()
+            optimizer = optim.Adam(model.parameters(), lr=0.003)
+            
+            # Train for 1 epoch
+            model.train()
+            correct = 0
+            total = 0
+            
+            for batch_idx, (data, target) in enumerate(train_loader):
+                data, target = data.to(device), target.to(device)
+                optimizer.zero_grad()
+                output = model(data)
+                loss = criterion(output, target)
+                loss.backward()
+                optimizer.step()
+                
+                _, predicted = output.max(1)
+                total += target.size(0)
+                correct += predicted.eq(target).sum().item()
+            
+            accuracy = 100. * correct / total
+            assert accuracy > 95, f"Training accuracy is {accuracy}%, should be > 95%"
+        EOL
+
+    - name: Run tests
+      run: |
+        pytest test_model.py -v 
