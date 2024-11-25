@@ -37,12 +37,14 @@ def train(model, train_loader, epochs, optimizer, criterion, device):
             total_samples += target.size(0)  # Add batch size to total
         
         # Calculate average loss and accuracy for the epoch
-        train_loss /= len(train_loader)
-        train_acc = correct / total_samples
+        avg_train_loss = train_loss/len(train_loader)
+        train_acc = 100. * correct / total_samples
         
         print(f"Epoch: {epoch+1}")
         print(f"Training Loss: {train_loss:.4f}")
         print(f"Training Accuracy: {train_acc:.4f}")
+
+        return avg_train_loss, train_acc
 
 
 def test(model, test_loader, criterion, device):
@@ -61,30 +63,31 @@ def test(model, test_loader, criterion, device):
             correct += target.eq(preds).sum().item()
             test_loss += criterion(output, target)
             # print(test_loss)
-    test_acc = correct / preds_total
+    test_acc = 100. * correct / preds_total
     avg_test_loss = test_loss/ len(test_loader)  #len of test loader gives total number of batches.
     print("Test Acc:",test_acc)
     print("Avg test loss:",avg_test_loss)
+    return avg_test_loss, test_acc
 
-def calculate_test_loss(model, test_loader, criterion, device):
-    model.eval()  # Set the model to evaluation mode
-    test_loss = 0
-    correct = 0
-    total = 0
+# def calculate_test_loss(model, test_loader, criterion, device):
+#     model.eval()  # Set the model to evaluation mode
+#     test_loss = 0
+#     correct = 0
+#     total = 0
     
-    with torch.no_grad():  # No need to compute gradients for testing
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            test_loss += criterion(output, target).item()
-            pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
-            total += target.size(0)
+#     with torch.no_grad():  # No need to compute gradients for testing
+#         for data, target in test_loader:
+#             data, target = data.to(device), target.to(device)
+#             output = model(data)
+#             test_loss += criterion(output, target).item()
+#             pred = output.argmax(dim=1, keepdim=True)
+#             correct += pred.eq(target.view_as(pred)).sum().item()
+#             total += target.size(0)
     
-    test_loss /= len(test_loader)  # Average loss per batch
-    accuracy = 100. * correct / total
+#     test_loss /= len(test_loader)  # Average loss per batch
+#     accuracy = 100. * correct / total
     
-    return test_loss, accuracy
+#     return test_loss, accuracy
 
 def count_parameters(model):
     """

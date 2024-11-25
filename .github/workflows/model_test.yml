@@ -29,67 +29,63 @@ jobs:
         cat > test_model.py << 'EOL'
         import torch
         import pytest
-        from model import Model
-        from train_test import count_parameters
-        from torch.utils.data import DataLoader
-        from torchvision import datasets, transforms
         import torch.nn as nn
         import torch.optim as optim
+        from torch.utils.data import DataLoader
+        from torchvision import datasets, transforms
+        from model import Model
+        from train_test import count_parameters, train, test
 
         @pytest.fixture
         def model():
             return Model()
 
         @pytest.fixture
-        def data_loaders():
+        def criterion():
+            return nn.CrossEntropyLoss()
+
+        @pytest.fixture
+        def optimizer(model):
+            return optim.Adam(model.parameters(), lr=0.003)
+
+        @pytest.fixture
+        def device():
+            return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        @pytest.fixture
+        def train_loader():
             transform = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize((0.1307,), (0.3081,))
             ])
-            
             train_dataset = datasets.MNIST(root='./data', train=True, 
                                          download=True, transform=transform)
-            train_loader = DataLoader(dataset=train_dataset, 
-                                    batch_size=64, shuffle=True)
-            
+            return DataLoader(dataset=train_dataset, batch_size=64, shuffle=True)
+
+        @pytest.fixture
+        def test_loader():
+            transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.1307,), (0.3081,))
+            ])
             test_dataset = datasets.MNIST(root='./data', train=False, 
                                         download=True, transform=transform)
-            test_loader = DataLoader(dataset=test_dataset, 
-                                   batch_size=64, shuffle=False)
-            
-            return train_loader, test_loader
+            return DataLoader(dataset=test_dataset, batch_size=64, shuffle=False)
 
         def test_parameter_count(model):
             params = count_parameters(model)
             assert params['total'] < 25000, f"Model has {params['total']} parameters, should be less than 25000"
 
-        def test_training_accuracy(model, data_loaders):
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        def test_training_and_accuracy(model, train_loader, test_loader, optimizer, criterion, device):
             model = model.to(device)
-            train_loader, test_loader = data_loaders
             
-            criterion = nn.CrossEntropyLoss()
-            optimizer = optim.Adam(model.parameters(), lr=0.003)
+            # Train for 1 epoch using the imported train function
+            train_loss, train_accuracy = train(model, train_loader, 1, optimizer, criterion, device)
+            assert train_accuracy > 90, f"Training accuracy is {train_accuracy}%, should be > 90%"
             
-            # Train for 1 epoch
-            model.train()
-            correct = 0
-            total = 0
-            
-            for batch_idx, (data, target) in enumerate(train_loader):
-                data, target = data.to(device), target.to(device)
-                optimizer.zero_grad()
-                output = model(data)
-                loss = criterion(output, target)
-                loss.backward()
-                optimizer.step()
-                
-                _, predicted = output.max(1)
-                total += target.size(0)
-                correct += predicted.eq(target).sum().item()
-            
-            accuracy = 100. * correct / total
-            assert accuracy > 95, f"Training accuracy is {accuracy}%, should be > 95%"
+            # Test accuracy check
+            test_loss, test_accuracy = test(model, test_loader, criterion, device)
+            assert test_accuracy > 95, f"Test accuracy is {test_accuracy}%, should be > 95%"
         EOL
 
     - name: Run tests
