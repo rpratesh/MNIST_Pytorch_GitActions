@@ -26,8 +26,8 @@ The CNN architecture consists of:
 ## Model Performance
 
 The model achieves the following targets (on MNIST dataset):
-- Training accuracy: > 90% after 1 epoch
-- Test accuracy: > 95%
+- Training accuracy: > 95% after 1 epoch
+- Test accuracy: > 95% after 1 epoch
 - Parameter count: < 25,000 parameters
 
 ## Requirements
@@ -44,6 +44,30 @@ bash
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 pip install pytest numpy
 ```
+
+## Usage
+To train the model
+```
+python train_test.py
+```
+It prints following logs after training without image augmentation:  
+Total parameters: 13,898  
+Epoch: 1  
+Average training Loss: 0.1549  
+Training Accuracy: 95.2567  
+Average test loss: 0.0514  
+Test Accuracy: 98.36  
+
+Training logs with image augmentation:  
+Total parameters: 13,898  
+Epoch: 1  
+Average training Loss: 0.3047  
+Training Accuracy: 90.4700  
+Average test loss: 0.0526  
+Test Accuracy: 98.55  
+
+A sample of augmented images:  
+![Alt text](./augimages.PNG)
 
 ### Automated Testing
 

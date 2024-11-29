@@ -144,7 +144,7 @@ if __name__ == "__main__":
     # Use Adam optimizer with a higher learning rate for faster convergence
     optimizer = optim.Adam(nn_model.parameters(), lr=0.003)
 
-    train_loader,test_loader = create_dataset_loaders(True, True)
+    train_loader,test_loader = create_dataset_loaders(False, False)
     
     # Train for 1 epoch
     train(nn_model, train_loader, 1, optimizer, criterion, device)
