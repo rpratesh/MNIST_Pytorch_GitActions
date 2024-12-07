@@ -86,6 +86,27 @@ jobs:
             # Test accuracy check
             test_loss, test_accuracy = test(model, test_loader, criterion, device)
             assert test_accuracy > 95, f"Test accuracy is {test_accuracy}%, should be > 95%"
+
+        def test_mnist_normalization_parameters():
+            # Load MNIST dataset without any transforms
+            dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transforms.ToTensor())
+            #batch_size is entire dataset size -> to load whole dataset in one go
+            data_loader = DataLoader(dataset, batch_size=len(dataset))
+            
+            # Get all images in one batch
+            images, _ = next(iter(data_loader))
+            
+            # Calculate mean and std across all images
+            calculated_mean = torch.mean(images)
+            calculated_std = torch.std(images)
+            
+            # The values used in the transform
+            used_mean = 0.1307
+            used_std = 0.3081
+            
+            # Assert that the values are close to the ones we use
+            torch.testing.assert_close(calculated_mean, torch.tensor(used_mean), rtol=0.01, atol=0.01)
+            torch.testing.assert_close(calculated_std, torch.tensor(used_std), rtol=0.01, atol=0.01)
         EOL
 
     - name: Run tests

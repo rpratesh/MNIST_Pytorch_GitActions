@@ -75,12 +75,8 @@ The project includes automated tests that run on GitHub Actions. The tests verif
 1. Model parameter count (< 25,000 parameters)
 2. Training accuracy (> 90% after 1 epoch)
 3. Test accuracy (> 95%)
+4. Data normalisation values (mean and standard dev) of MNIST dataset used in dataset transforms are correct or not
 
-To run tests locally:
-```
-bash
-pytest test_model.py -v
-```
 
 ## GitHub Actions Workflow
 
