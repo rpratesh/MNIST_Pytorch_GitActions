@@ -22,7 +22,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-        pip install pytest numpy
+        pip install pytest numpy matplotlib pillow
 
     - name: Create test file
       run: |
@@ -81,7 +81,7 @@ jobs:
             
             # Train for 1 epoch using the imported train function
             train_loss, train_accuracy = train(model, train_loader, 1, optimizer, criterion, device)
-            assert train_accuracy > 90, f"Training accuracy is {train_accuracy}%, should be > 90%"
+            assert train_accuracy > 95, f"Training accuracy is {train_accuracy}%, should be > 95%"
             
             # Test accuracy check
             test_loss, test_accuracy = test(model, test_loader, criterion, device)
@@ -90,7 +90,7 @@ jobs:
         def test_mnist_normalization_parameters():
             # Load MNIST dataset without any transforms
             dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transforms.ToTensor())
-            #batch_size is entire dataset size -> to load whole dataset in one go
+            # batch_size is entire dataset size -> to load whole dataset in one go
             data_loader = DataLoader(dataset, batch_size=len(dataset))
             
             # Get all images in one batch
@@ -107,6 +107,33 @@ jobs:
             # Assert that the values are close to the ones we use
             torch.testing.assert_close(calculated_mean, torch.tensor(used_mean), rtol=0.01, atol=0.01)
             torch.testing.assert_close(calculated_std, torch.tensor(used_std), rtol=0.01, atol=0.01)
+
+        def test_model_architecture():
+            """Test if model architecture is valid"""
+            model = Model()
+            # Test input shape
+            test_input = torch.randn(1, 1, 28, 28)  # MNIST image size
+            try:
+                output = model(test_input)
+                assert output.shape == (1, 10), f"Expected output shape (1, 10), got {output.shape}"
+            except Exception as e:
+                pytest.fail(f"Model forward pass failed: {str(e)}")
+
+        def test_data_augmentation():
+            """Test if data augmentation transforms are working"""
+            from train_test import create_dataset_loaders
+            
+            # Get loaders with and without augmentation
+            train_loader_aug, _ = create_dataset_loaders(augmentation=True)
+            train_loader_no_aug, _ = create_dataset_loaders(augmentation=False)
+            
+            # Get a batch from each
+            aug_images, _ = next(iter(train_loader_aug))
+            no_aug_images, _ = next(iter(train_loader_no_aug))
+            
+            # Check if augmented and non-augmented images are different
+            assert not torch.allclose(aug_images, no_aug_images), "Augmentation did not modify the images"
+
         EOL
 
     - name: Run tests

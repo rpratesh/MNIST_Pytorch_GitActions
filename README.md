@@ -7,8 +7,10 @@ This project implements a Convolutional Neural Network (CNN) for classifying han
 ## Project Structure
 
 ```
-├── model.py           # CNN model architecture
-├── train_test.py     # Training and testing functions
+├── model.py                 # CNN model architecture
+├── train_test.py            # Training and testing functions
+├── MNIST dataset            # Offline dowloaded MNIST dataset
+├── stitch_aug_images.py     # Utility Script to create a grid of augmented images
 ├── .github/
 │   └── workflows/
 │       └── model_test.yml  # GitHub Actions
@@ -73,9 +75,11 @@ A sample of augmented images:
 
 The project includes automated tests that run on GitHub Actions. The tests verify:
 1. Model parameter count (< 25,000 parameters)
-2. Training accuracy (> 90% after 1 epoch)
+2. Training accuracy (> 95% after 1 epoch)
 3. Test accuracy (> 95%)
 4. Data normalisation values (mean and standard dev) of MNIST dataset used in dataset transforms are correct or not
+5. If the model can handle the correct input shape (28x28x1) and produces the expected output shape (1x10).
+6. That data augmentation is working as expected, by comparing a batch of data with and without augmentation.
 
 
 ## GitHub Actions Workflow
