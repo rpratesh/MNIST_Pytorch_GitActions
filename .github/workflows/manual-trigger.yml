@@ -1,0 +1,24 @@
+name: Manual Trigger Workflow
+
+on:
+  repository_dispatch:
+    types: [manual-trigger]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Run tests
+        run: |
+          # Replace this with your actual test commands
+          echo "Running tests..."
+          # Example test command:
+          # npm test
+          
+      - name: Check test results
+        run: |
+          # Add your test result checking logic here
+          # This is just a placeholder that always succeeds
+          exit 0 
